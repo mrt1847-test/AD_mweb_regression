@@ -15,8 +15,10 @@ class Srp():
         """
         runtext = f'Home > {keyword}검색'
         print("#", runtext, "시작")
+        self.page.get_by_role("button", name="검색").click()
         self.page.fill("input[name='keyword']", keyword)
-        self.page.press("input[name='keyword']", "Enter")
+        # self.page.press("input[name='keyword']", "Enter")
+        self.page.locator("fieldset").get_by_role("button", name="검색", exact=True).click()
         print("#", runtext, "종료")
 
     def search_module_by_title(self, module_title):
@@ -48,8 +50,8 @@ class Srp():
         runtext = f'SRP > {module_title}모듈내 상품 노출 확인'
         print("#", runtext, "시작")
         child = self.page.get_by_text(module_title, exact=True)
-        parent = child.locator("xpath=../..")
-        target = parent.locator("div.box__item-container > div.box__image > a")
+        parent = child.locator("xpath=../../..")
+        target = parent.locator("div.box__itemcard > a").nth(0)
         target.scroll_into_view_if_needed()
         expect(target).to_be_visible()
         goodscode = target.get_attribute("data-montelena-goodscode")
@@ -68,10 +70,9 @@ class Srp():
         print("#", runtext, "시작")
         element = self.page.locator(f'a[data-montelena-goodscode="{goodscode}"]').nth(0)
         # 새 페이지 대기
-        with self.page.context.expect_page() as new_page_info:
-            element.click()
-        new_page = new_page_info.value
-        url = new_page.url
+        element.click()
+        self.page.wait_for_url(lambda url: goodscode in url, timeout=10000)  # 10초 대기
+        url = self.page.url
         time.sleep(2)
         print("#", runtext, "종료")
 
@@ -91,7 +92,7 @@ class Srp():
         """
         runtext = f'SRP > 일반상품 광고상품 비율 확인'
         print("#", runtext, "시작")
-        container_divs = parent.locator("> div").all()
+        container_divs = parent.locator("div.box__itemcard").all()
 
         for idx, div in enumerate(container_divs[:10], start=1):
             has_ads = div.locator("div.box__ads-layer").count() > 0
@@ -121,7 +122,7 @@ class Srp():
         """
         runtext = f'SRP > 모듈내 광고상품 노출 확인'
         print("#", runtext, "시작")
-        container_divs = parent.locator("> div").all()
+        container_divs = parent.locator("div.box__itemcard").all()
 
         for idx, div in enumerate(container_divs[:10], start=1):
             if div.locator("div.box__ads-layer").count() > 0:
@@ -131,7 +132,7 @@ class Srp():
 
         if first_div_with_ads:
             # box__ads-layer 포함한 상품의 번호 가져오기
-            target = first_div_with_ads.locator("div.box__item-container > div.box__image > a")
+            target = first_div_with_ads.locator(">a")
             target.scroll_into_view_if_needed()
             expect(target).to_be_visible()
             goodscode = target.get_attribute("data-montelena-goodscode")

@@ -103,7 +103,7 @@ def page(context: BrowserContext):
 #     if not case_ids:
 #         raise RuntimeError(f"[TestRail] section_id '{TESTRAIL_SECTION_ID}'에 케이스가 없습니다.")
 #     # 3. Run 생성
-#     run_name = f"AD Regression test dweb {datetime.now():%Y-%m-%d %H:%M:%S}"
+#     run_name = f"AD Regression test mweb {datetime.now():%Y-%m-%d %H:%M:%S}"
 #     payload = {
 #         "suite_id": TESTRAIL_SUITE_ID,
 #         "name": run_name,
