@@ -1,7 +1,7 @@
 from playwright.async_api import Page
 import requests
 import time
-from src.gtas_python_core.gtas_python_core_vault import Vault
+from src.gtas_python_core_v2.gtas_python_core_vault_v2 import Vault
 
 class Etc():
     def __init__(self, page: Page):
@@ -10,10 +10,10 @@ class Etc():
     def goto(self):
         self.page.goto("https://www.gmarket.co.kr")
 
-    def login(self):
+    def login(self, username: str, password: str):
 
-        username = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("username")
-        password = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("password")
+        # username = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("username")
+        # password = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("password")
 
         self.page.click("text=로그인")
         time.sleep(2)
