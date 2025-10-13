@@ -46,6 +46,11 @@ def page(context: BrowserContext):
     yield page
     page.close()
 
+def pytest_report_teststatus(report, config):
+    # 이름에 'wait_'가 들어간 테스트는 리포트 출력에서 숨김
+    if any(keyword in report.nodeid for keyword in ["wait_", "fetch"]):
+        return report.outcome, None, ""
+    return None
 
 #
 # with open('config.json') as config_file:
