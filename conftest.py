@@ -6,6 +6,7 @@ import os
 import pytest
 import requests
 from datetime import datetime
+from pathlib import Path
 
 # 브라우저 fixture (세션 단위, 한 번만 실행)
 @pytest.fixture(scope="session")
@@ -51,6 +52,44 @@ def pytest_report_teststatus(report, config):
     if any(keyword in report.nodeid for keyword in ["wait_", "fetch"]):
         return report.outcome, None, ""
     return None
+
+# JSON 파일이 들어 있는 폴더 지정
+JSON_DIR = Path(__file__).parent / "json"  # json 폴더 내의 JSON 파일 전부 대상
+
+def get_json_files():
+    """폴더 내 모든 .json 파일 경로 리스트 반환"""
+    return sorted(JSON_DIR.glob("*.json"))
+
+def clear_json_cases(json_data):
+    """
+    JSON 데이터에서 최상위 키(case1, case2 등)는 유지하고,
+    값은 모두 빈 dict로 초기화
+    """
+    cleared_list = []  # 초기화된 JSON 데이터를 담을 리스트
+
+    for case_group in json_data:              # 각 JSON 객체 순회
+        cleared_group = {}                    # 초기화된 case 묶음
+        for case_name in case_group.keys():   # case1, case2 등 키 순회
+            cleared_group[case_name] = {}     # 내부 데이터 비우기
+        cleared_list.append(cleared_group)    # 변환된 데이터 추가
+
+    return cleared_list
+
+@pytest.fixture(scope="session", autouse=True)
+def clear_all_json_files():
+    files = list(get_json_files())
+    for f in files:
+        print(" -", f)
+    print(f"총 {len(files)}개 파일 발견")
+
+    for file_path in files:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        cleared = clear_json_cases(data)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(cleared, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ JSON 초기화 완료: {len(files)}개 파일 처리됨")
 
 #
 # with open('config.json') as config_file:
