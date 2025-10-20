@@ -12,26 +12,23 @@ import time
 
 STATE_PATH = "state.json"
 GMARKET_URL = "https://m.gmarket.co.kr"  # 모바일 페이지 기준 셀렉터 안정성
-# ------------------------
-# :일: Playwright 세션 단위 fixture
-# ------------------------
+
+# Playwright 세션 단위 fixture
 @pytest.fixture(scope="session")
 def pw():
     """Playwright 세션 관리"""
     with sync_playwright() as p:
         yield p
-# ------------------------
-# :둘: 브라우저 fixture
-# ------------------------
+
+# 브라우저 fixture
 @pytest.fixture(scope="session")
 def browser(pw):
     """세션 단위 브라우저"""
     browser = pw.chromium.launch(headless=False)
     yield browser
     browser.close()
-# ------------------------
-# :셋: 로그인 상태 검증
-# ------------------------
+
+# 로그인 상태 검증
 def is_state_valid(state_path: str) -> bool:
     """state.json이 유효한지 확인 (쿠키 기반)"""
     if not os.path.exists(state_path):
@@ -48,9 +45,8 @@ def is_state_valid(state_path: str) -> bool:
     except Exception as e:
         print(f"[WARN] state.json 검증 오류: {e}")
         return False
-# ------------------------
-# :넷: 로그인 수행 + state.json 저장
-# ------------------------
+
+# 로그인 수행 + state.json 저장
 def create_login_state(pw):
     """로그인 수행 후 state.json 저장"""
     print("[INFO] 로그인 절차 시작")
@@ -69,9 +65,8 @@ def create_login_state(pw):
     context.storage_state(path=STATE_PATH)
     browser.close()
     print("[INFO] 로그인 완료 및 state.json 저장됨")
-# ------------------------
-# :다섯: 로그인 상태 fixture
-# ------------------------
+
+# 로그인 상태 fixture
 @pytest.fixture(scope="session")
 def ensure_login_state(pw):
     """
@@ -87,9 +82,8 @@ def ensure_login_state(pw):
     else:
         print("[INFO] 로그인 세션 유효 → 기존 state.json 사용")
     return STATE_PATH
-# ------------------------
+
 # :여섯: page fixture
-# ------------------------
 @pytest.fixture(scope="function")
 def page(browser, ensure_login_state):
     """
@@ -134,8 +128,6 @@ def page(browser, ensure_login_state):
     yield page
     context.close()
 
-
-
 def pytest_report_teststatus(report, config):
     # 이름에 'wait_'가 들어간 테스트는 리포트 출력에서 숨김
     if any(keyword in report.nodeid for keyword in ["wait_", "fetch"]):
@@ -149,6 +141,7 @@ def get_json_files():
     """폴더 내 모든 .json 파일 경로 리스트 반환"""
     return sorted(JSON_DIR.glob("*.json"))
 
+#상품 클릭/노출시간 및 상품번호 기록 초기화
 def clear_json_cases(json_data):
     """
     JSON 데이터에서 최상위 키(case1, case2 등)는 유지하고,
@@ -353,59 +346,3 @@ def clear_all_json_files():
 #         shutil.rmtree(screenshots_dir)  # 폴더 통째로 삭제
 #         print(f"[CLEANUP] '{screenshots_dir}' 폴더 삭제 완료")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# STATE_PATH = "state.json"
-#
-# @pytest.fixture(scope="session")
-# def ensure_login_state():
-#     """로그인 상태가 저장된 state.json을 보장하는 fixture"""
-#     if not os.path.exists(STATE_PATH):
-#         with sync_playwright() as p:
-#             browser = p.chromium.launch(headless=False)
-#             context = browser.new_context()
-#             page = context.new_page()
-#
-#             page.goto("https://www.gmarket.co.kr")
-#             page.click("text=로그인")
-#             page.fill("#typeMemberInputId", "cease2504")
-#             page.fill("#typeMemberInputPassword", "asdf12!@")
-#             page.click("#btn_memberLogin")
-#
-#             # state.json 저장
-#             context.storage_state(path=STATE_PATH)
-#             browser.close()
-#     return STATE_PATH
-#
-#
-# @pytest.fixture(scope="function")
-# def page(ensure_login_state):
-#     """로그인 상태가 보장된 페이지 fixture"""
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(headless=False)
-#         context = browser.new_context(storage_state=ensure_login_state)
-#         page = context.new_page()
-#         yield page
-#         context.close()
-#         browser.close()
