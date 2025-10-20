@@ -173,10 +173,10 @@ def test_05_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     SELECT item_no, ins_date
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '{file_start_time}'
-      AND cguid = '11758850530814005372000000'
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
-    """
+    AND cguid = '11758850530814005372000000'
+    AND dt = '{file_start_dt}'
+    AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+        """
     click_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기 (DB 처리 반영 시간 고려)
 

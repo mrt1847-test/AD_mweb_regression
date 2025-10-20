@@ -35,30 +35,30 @@ def test_01_vip_1(page, goods_num, case_id, request):
     logger = TimeLogger("json/test_vip.json")
 
     # testrail 결과 기록시 로그 포함 위해 로그 수집
-    output_content = io.StringIO()
-    with contextlib.redirect_stdout(output_content):
-        # g마켓 홈 으로 이동
-        etc.goto()
-        # 일반회원 로그인
-        etc.login("t4adbuy01", "Gmkt1004!!")
-        # vip 로 이동
-        etc.goto_vip(goods_num)
-        # 상품 노출 확인시간 저장
-        logger.record_time("case1", goods_num, "exposure")
-        # VT 모듈로 이동 후 확인
-        vip_page.vip_module_by_title("함께 보면 좋은 상품이에요")
-        # 광고상품 상품 번호 추출
-        result = vip_page.assert_item_in_module("함께 보면 좋은 상품이에요")
-        goodscode = result["goodscode"]
-        # 상품 번호 저장
-        logger.record_goodscode("case1",goods_num, goodscode)
-        target = result["target"]
-        # 상품 클릭시간 저장
-        logger.record_time("case1", goods_num, "click")
-        # 상품 클릭후 해당 vip 이동 확인
-        vip_page.click_goods(goodscode, target)
+    # output_content = io.StringIO()
+    # with contextlib.redirect_stdout(output_content):
+    # g마켓 홈 으로 이동
+    etc.goto()
+    # 일반회원 로그인
+    etc.login("t4adbuy01", "Gmkt1004!!")
+    # vip 로 이동
+    etc.goto_vip(goods_num)
+    # 상품 노출 확인시간 저장
+    logger.record_time("case1", goods_num, "exposure")
+    # VT 모듈로 이동 후 확인
+    vip_page.vip_module_by_title("함께 보면 좋은 상품이에요")
+    # 광고상품 상품 번호 추출
+    result = vip_page.assert_item_in_module("함께 보면 좋은 상품이에요")
+    goodscode = result["goodscode"]
+    # 상품 번호 저장
+    logger.record_goodscode("case1",goods_num, goodscode)
+    target = result["target"]
+    # 상품 클릭시간 저장
+    logger.record_time("case1", goods_num, "click")
+    # 상품 클릭후 해당 vip 이동 확인
+    vip_page.click_goods(goodscode, target)
     # hook에서 사용하기 위해 item에 저장
-    request.node._stdout_capture = output_content.getvalue()
+    # request.node._stdout_capture = output_content.getvalue()
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("goods_num, case_id", vip_testcases2, ids=[c for _, c in vip_testcases2])

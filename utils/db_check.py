@@ -1,11 +1,11 @@
 import requests
 import time
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
 from src.gtas_python_core_v2.gtas_python_core_vault_v2 import Vault
 
-load_dotenv()
+#load_dotenv()
 
 class DatabricksSPClient:
     def __init__(self):
