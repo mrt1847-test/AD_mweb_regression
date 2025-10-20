@@ -69,7 +69,7 @@ class Srp():
         runtext = f'SRP > {goodscode} 상품 클릭'
         print("#", runtext, "시작")
         element = self.page.locator(f'a[data-montelena-goodscode="{goodscode}"]').nth(0)
-        # 새 페이지 대기
+        time.sleep(5)
         element.click()
         self.page.wait_for_url(lambda url: goodscode in url, timeout=10000)  # 10초 대기
         url = self.page.url

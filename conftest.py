@@ -8,25 +8,118 @@ import requests
 from datetime import datetime
 from pathlib import Path
 
-# 브라우저 fixture (세션 단위, 한 번만 실행)
+STATE_PATH = "state.json"
+GMARKET_URL = "https://m.gmarket.co.kr"  # 모바일 페이지 기준 셀렉터 안정성
+# ------------------------
+# :일: Playwright 세션 단위 fixture
+# ------------------------
 @pytest.fixture(scope="session")
-def browser():
+def pw():
+    """Playwright 세션 관리"""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  # True/False로 headless 제어
-        yield browser
-        browser.close()
-
-
-# 컨텍스트 fixture (브라우저 환경)
+        yield p
+# ------------------------
+# :둘: 브라우저 fixture
+# ------------------------
+@pytest.fixture(scope="session")
+def browser(pw):
+    """세션 단위 브라우저"""
+    browser = pw.chromium.launch(headless=False)
+    yield browser
+    browser.close()
+# ------------------------
+# :셋: 로그인 상태 검증
+# ------------------------
+def is_state_valid(state_path: str) -> bool:
+    """state.json이 유효한지 확인 (쿠키 기반)"""
+    if not os.path.exists(state_path):
+        return False
+    try:
+        with open(state_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        cookies = data.get("cookies", [])
+        now = time.time()
+        # 쿠키 하나라도 만료되지 않았으면 로그인 유지 가능
+        if any("expires" in c and c["expires"] and c["expires"] > now for c in cookies):
+            return True
+        return False
+    except Exception as e:
+        print(f"[WARN] state.json 검증 오류: {e}")
+        return False
+# ------------------------
+# :넷: 로그인 수행 + state.json 저장
+# ------------------------
+def create_login_state(pw):
+    """로그인 수행 후 state.json 저장"""
+    print("[INFO] 로그인 절차 시작")
+    browser = pw.chromium.launch(headless=False)  # 화면 확인용
+    context = browser.new_context()
+    page = context.new_page()
+    page.goto(GMARKET_URL)
+    # 로그인 페이지 이동 및 입력
+    page.click("text=로그인")
+    page.fill("#typeMemberInputId", "t4adbuy01")
+    page.fill("#typeMemberInputPassword", "Gmkt1004!!")
+    page.click("#btn_memberLogin")
+    # 로그인 완료 대기
+    page.wait_for_selector("text=로그아웃", timeout=15000)
+    # 로그인 상태 저장
+    context.storage_state(path=STATE_PATH)
+    browser.close()
+    print("[INFO] 로그인 완료 및 state.json 저장됨")
+# ------------------------
+# :다섯: 로그인 상태 fixture
+# ------------------------
+@pytest.fixture(scope="session")
+def ensure_login_state(pw):
+    """
+    state.json 존재 여부 및 유효성 확인.
+    없거나 만료 시 자동 로그인 수행
+    """
+    if not os.path.exists(STATE_PATH):
+        print("[INFO] state.json 없음 → 로그인 시도")
+        create_login_state(pw)
+    elif not is_state_valid(STATE_PATH):
+        print("[INFO] state.json 만료됨 → 재로그인 시도")
+        create_login_state(pw)
+    else:
+        print("[INFO] 로그인 세션 유효 → 기존 state.json 사용")
+    return STATE_PATH
+# ------------------------
+# :여섯: page fixture
+# ------------------------
 @pytest.fixture(scope="function")
-def context(browser: Browser):
+def page(browser, ensure_login_state):
+    """
+    로그인 상태가 보장된 page fixture
+    각 테스트마다 격리된 context 제공
+    """
+    iphone_12 = {
+        "viewport": ViewportSize(width=480, height=944),
+        "user_agent": (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
+            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+        ),
+        "device_scale_factor": 3,
+        "is_mobile": True,
+        "has_touch": True,
+    }
+
     context = browser.new_context(
-        viewport=ViewportSize(width=420, height=844),
-        user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)",
-        device_scale_factor=3,
-        is_mobile=True,
-        has_touch=True,
+        **iphone_12,
+        storage_state=ensure_login_state,
+        locale="ko-KR",   # (선택) 한국어 환경 맞춤
+        color_scheme="light"  # (선택) 다크모드 감지 우회
     )
+
+    # context = browser.new_context(
+    #     viewport=ViewportSize(width=420, height=844),
+    #     user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)",
+    #     device_scale_factor=3,
+    #     is_mobile=True,
+    #     has_touch=True,
+    #     storage_state=ensure_login_state
+    # )
 
     # navigator.webdriver 우회
     context.add_init_script("""
@@ -35,17 +128,11 @@ def context(browser: Browser):
         });
     """)
 
-    yield context
+    page = context.new_page()
+    yield page
     context.close()
 
 
-# 페이지 fixture
-@pytest.fixture(scope="function")
-def page(context: BrowserContext):
-    page = context.new_page()
-    page.set_default_timeout(10000)  # 기본 10초 타임아웃
-    yield page
-    page.close()
 
 def pytest_report_teststatus(report, config):
     # 이름에 'wait_'가 들어간 테스트는 리포트 출력에서 숨김

@@ -2,6 +2,7 @@ import requests
 import time
 from dotenv import load_dotenv
 import os
+import json
 from datetime import datetime, timedelta
 from src.gtas_python_core_v2.gtas_python_core_vault_v2 import Vault
 
@@ -73,19 +74,19 @@ class DatabricksSPClient:
        goodscode = "2997549821"
        self.assert_db_record_time(db_data, record_time, goodscode)
        """
-        db_row = next(
-            (row for row in db_data["data_array"] if row[0] == goodscode),
-            None
-        )
-        if db_row is None:
-            raise AssertionError(f"{goodscode}에 해당하는 DB 기록이 없습니다.")  # DB에 레코드가 없는 경우 명확하게 실패 처리
 
-        db_time = db_row[0]  # 안전하게 db_row에서 시간 가져오기
-
-        # 테스트 기록 시간과 DB 기록 시간 비교
+        matching_rows = [row for row in db_data["data_array"] if row[0] == goodscode]
+        if not matching_rows:
+            raise AssertionError(f"{goodscode}에 해당하는 DB 기록이 없습니다.")  # DB에 레코드가 없는 경우
         dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")
-        dt2 = datetime.strptime(db_time, "%Y-%m-%d %H:%M:%S")
         dt3 = dt1 + timedelta(seconds=10)  # 허용 오차 10초
-        print(f"[ASSERT_DB_RECORD_TIME] goodscode={goodscode}, record_time={dt1}, db_time={dt2}")
-
-        assert dt1 <= dt2 <= dt3  # DB 기록 시간이 테스트 기록 시간 ±10초 범위 안인지 확인
+        dt4 = dt1 - timedelta(seconds=10)  # 허용 오차 10초
+        # 하나라도 assert 통과하는지 확인
+        for row in matching_rows:
+            dt2 = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
+            print(f"[ASSERT_DB_RECORD_TIME] goodscode={goodscode}, record_time={dt1}, db_time={dt2}")
+            if dt4 <= dt2 <= dt3:
+                break  # 조건 통과 -> 반복 종료
+        else:
+            # 반복문을 break 없이 종료했다면, 모든 레코드 실패
+            raise AssertionError(f"{goodscode}에 해당하는 DB 기록 중 기록 시간이 테스트 기록 시간 ±10초 범위 내에 있는 것이 없습니다.")
