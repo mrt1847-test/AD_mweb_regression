@@ -7,6 +7,8 @@ import pytest
 import requests
 from datetime import datetime
 from pathlib import Path
+import time
+
 
 STATE_PATH = "state.json"
 GMARKET_URL = "https://m.gmarket.co.kr"  # 모바일 페이지 기준 셀렉터 안정성
