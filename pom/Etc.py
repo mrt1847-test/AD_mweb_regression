@@ -9,6 +9,8 @@ class Etc():
 
     def goto(self):
         self.page.goto("https://www.gmarket.co.kr")
+        #네트워크 요청 엇을때까지 대기
+        self.page.wait_for_load_state("networkidle")
 
     def login(self, username: str, password: str):
 
@@ -73,6 +75,37 @@ class Etc():
 
     def goto_vip(self,goods_num):
         self.page.goto(f"https://item.gmarket.co.kr/Item?goodscode={goods_num}")
+        #네트워크 요청 엇을때까지 대기
+        self.page.wait_for_load_state("networkidle")
 
     def goto_vip_starship(self):
         self.page.goto("https://item.gmarket.co.kr/Item?goodscode=1784246790")
+
+    def close_layer_if_exists(self):
+        """
+        aria-label='레이어 닫기' 라는 버튼이 있을 경우 닫는 함수
+        없으면 조용히 무시함.
+        """
+        try:
+            # 해당 요소가 나타날 때까지 잠시 대기
+            close_btn = self.page.get_by_label("레이어 닫기")
+            close_btn.wait_for(state="visible", timeout=3000)
+            close_btn.click()
+            print("✅ '레이어 닫기' 배너를 닫았습니다.")
+        except TimeoutError:
+            # 없으면 무시
+            print("ℹ️ '레이어 닫기' 배너가 없습니다. 계속 진행합니다.")
+
+    def close_layer_if_exists1(self):
+
+        start = time.time()
+
+        while (time.time() - start) < 3:
+            btn = self.page.get_by_label("레이어 닫기")
+            if btn.count() > 0 and btn.is_visible():
+                btn.click()
+                print("✅ '레이어 닫기' 배너를 닫았습니다.")
+                return  # <-- 닫으면 그냥 함수 종료
+            time.sleep(0.5)
+
+        print("ℹ️ '레이어 닫기' 배너가 없습니다. 계속 진행합니다.")

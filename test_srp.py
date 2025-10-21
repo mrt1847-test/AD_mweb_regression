@@ -40,6 +40,8 @@ def test_01_srp_1(page, keyword, case_id, request):
         with contextlib.redirect_stdout(output_content):
             # g마켓 홈 으로 이동
             etc.goto()
+            #배너 레이어 존재시 닫음
+            etc.close_layer_if_exists()
             # 일반회원 로그인
             # etc.login("t4adbuy01", "Gmkt1004!!")
             # keyword 로 검색창에 검색
@@ -75,6 +77,8 @@ def test_02_srp_2(page, keyword, case_id, request):
         with contextlib.redirect_stdout(output_content):
             # g마켓 홈 으로 이동
             etc.goto()
+            #배너 레이어 존재시 닫음
+            etc.close_layer_if_exists()
             # 일반회원 로그인
             # etc.login("t4adbuy01", "Gmkt1004!!")
             # keyword 로 검색창에 검색
@@ -111,6 +115,8 @@ def test_srp_03_3(page, keyword, case_id, request):
         with contextlib.redirect_stdout(output_content):
             # g마켓 홈 으로 이동
             etc.goto()
+            #배너 레이어 존재시 닫음
+            etc.close_layer_if_exists()
             # 일반회원 로그인
             # etc.login("t4adbuy01", "Gmkt1004!!")
             # keyword 로 검색창에 검색
