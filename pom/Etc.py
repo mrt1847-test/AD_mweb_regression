@@ -22,6 +22,23 @@ class Etc():
         time.sleep(2)
         self.page.click("#btn_memberLogin")
 
+
+    def close_layer_if_exists(self):
+
+        start = time.time()
+
+        while (time.time() - start) < 3:
+            btn = self.page.get_by_label("레이어 닫기")
+            if btn.count() > 0 and btn.is_visible():
+                btn.click()
+                print("✅ '레이어 닫기' 배너를 닫았습니다.")
+                return  # <-- 닫으면 그냥 함수 종료
+            time.sleep(0.5)
+
+        print("ℹ️ '레이어 닫기' 배너가 없습니다. 계속 진행합니다.")
+
+
+
     def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):
         """
         Databricks SQL Warehouse API를 통해 SQL 실행 후 결과를 반환하는 함수

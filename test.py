@@ -20,17 +20,19 @@ def test_home_module_check():
 
         etc.goto()
         etc.login("t4adbuy01", "Gmkt1004!!")
+        etc.close_layer_if_exists()
         parent = home_page.home_module_by_title("이 상품을 본 고객들이")
-        goodscode = home_page.assert_item_in_module("이 상품을 본 고객들이")
-        print(goodscode)
+        #goodscode = home_page.assert_item_in_module("이 상품을 본 고객들이")
+        #print(goodscode)
         # 광고 태크 체크
         result = home_page.check_rvi_vt_cpc_ad_tag(parent)
-        print(result)
+        #print(result)
+        goodscode = result["goodscode"]
+        target = result["target"]
 
         # 상품 클릭후 해당 vip 이동 확인
-        #home_page.montelena_goods_click(goodscode)
-        print(target)
-        home_page.click_goods(goodscode)
+        home_page.click_goods(goodscode, target)
+        #print(target)
 
 
         print("✅ 모듈 탐색 테스트 완료")

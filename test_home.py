@@ -4,7 +4,7 @@ from pom.Etc import Etc
 from utils.TimeLogger import TimeLogger
 from utils.db_check import DatabricksSPClient
 import pytest
-#from case_data.vip_data import vip_testcases1, vip_testcases2, vip_testcases3, vip_testcases4
+#from case_data.vip_data import home_testcases1
 import json
 import io
 import contextlib
@@ -27,30 +27,28 @@ def file_start_hour():
 
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
-#@pytest.mark.parametrize("goods_num, case_id", vip_testcases1, ids=[c for _, c in vip_testcases1])
+#@pytest.mark.parametrize("goods_num, case_id", home_testcases1, ids=[c for _, c in home_testcases1])
 def test_01_home_1(page, goods_num, case_id, request):
     request.node._testrail_case_id = case_id
     etc = Etc(page)
     home_page = HomePage(page)
-    logger = TimeLogger("json/test_vip.json")
+    logger = TimeLogger("json/test_home.json")
 
     # testrail 결과 기록시 로그 포함 위해 로그 수집
-    # output_content = io.StringIO()
-    # with contextlib.redirect_stdout(output_content):
-    # g마켓 홈 으로 이동
+     #output_content = io.StringIO()
+     #with contextlib.redirect_stdout(output_content):
+        # g마켓 홈 으로 이동
     etc.goto()
     # 일반회원 로그인
     etc.login("t4adbuy01", "Gmkt1004!!")
-
-    # vip 로 이동
-    #etc.goto_vip(goods_num)
+    # 팝업창 뜨면 종료하기
+    etc.close_layer_if_exists()
     # 상품 노출 확인시간 저장
-    #logger.record_time("case1", goods_num, "exposure")
-
+    logger.record_time("case1", goods_num, "exposure")
     # RVI_VT_CPC 모듈로 이동 후 확인
-    home_page.home_module_by_title("함께 보면 좋은 상품이에요")
-    # 광고상품 상품 번호 추출
-    result = home_page.assert_item_in_module("함께 보면 좋은 상품이에요")
+    parent = home_page.home_module_by_title("이 상품을 본 고객들이")
+    # 광고 태그 확인
+    result = home_page.check_rvi_vt_cpc_ad_tag(parent)
     goodscode = result["goodscode"]
     # 상품 번호 저장
     logger.record_goodscode("case1",goods_num, goodscode)
@@ -59,8 +57,9 @@ def test_01_home_1(page, goods_num, case_id, request):
     logger.record_time("case1", goods_num, "click")
     # 상품 클릭후 해당 vip 이동 확인
     home_page.click_goods(goodscode, target)
+
     # hook에서 사용하기 위해 item에 저장
-    # request.node._stdout_capture = output_content.getvalue()
+    #request.node._stdout_capture = output_content.getvalue()
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 #@pytest.mark.parametrize("goods_num, case_id", vip_testcases2, ids=[c for _, c in vip_testcases2])
