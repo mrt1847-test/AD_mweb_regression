@@ -38,7 +38,6 @@ class Etc():
         print("ℹ️ '레이어 닫기' 배너가 없습니다. 계속 진행합니다.")
 
 
-
     def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):
         """
         Databricks SQL Warehouse API를 통해 SQL 실행 후 결과를 반환하는 함수

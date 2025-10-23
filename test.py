@@ -4,6 +4,7 @@ from docutils.nodes import target
 def test_home_module_check():
     from pom.Etc import Etc
     from pom.HomePage import HomePage
+    from pom.SrpPage import Srp
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -17,22 +18,23 @@ def test_home_module_check():
         page = context.new_page()
         etc = Etc(page)
         home_page = HomePage(page)
+        goods_num = "3408801000"
 
         etc.goto()
         etc.login("t4adbuy01", "Gmkt1004!!")
         etc.close_layer_if_exists()
+        # vip 로 이동
+        etc.goto_vip(goods_num)
+        etc.goto()
         parent = home_page.home_module_by_title("이 상품을 본 고객들이")
-        #goodscode = home_page.assert_item_in_module("이 상품을 본 고객들이")
-        #print(goodscode)
+        home_page.check_vip_product_in_rvi_vt_cpc_module(parent, goods_num)
         # 광고 태크 체크
         result = home_page.check_rvi_vt_cpc_ad_tag(parent)
-        #print(result)
         goodscode = result["goodscode"]
         target = result["target"]
 
         # 상품 클릭후 해당 vip 이동 확인
         home_page.click_goods(goodscode, target)
-        #print(target)
 
 
         print("✅ 모듈 탐색 테스트 완료")
