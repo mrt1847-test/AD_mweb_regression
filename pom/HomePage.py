@@ -43,45 +43,30 @@ class HomePage():
         print(f"✅ 상품({goodscode})이 rvi_vt_cpc모듈 타이틀 좌측에 노출됨")
         print("#", runtext, "종료")
 
-
-    def check_rvi_vt_cpc_ad_tag(self, parent, max_pages=4):
+    def check_rvi_vt_cpc_ad_tag(self, parent):
         """
-        특정 모듈의 광고 태그 노출 확인 (캐러셀 4페이지, 페이지당 최대 10개 상품)
+        특정 모듈의 첫 번째 페이지에서 광고 태그가 붙은 상품을 탐색하고, 발견 시 상품 코드와 Locator 반환
         :param (Locator) parent: 광고 모듈의 루트 element
-        :param (int) max_pages: 탐색할 최대 페이지 수 (기본값: 4)
-        :return (dict): {"goodscode": (str)   (없으면 None), "target": (Locator) 상품 Locator (없으면 None)}
+        :return (dict):
+            {"goodscode": 광고상품 번호,"target": 해당 상품 Locator}
         :example:
         """
         print("# HOME > RVI_VT_CPC 광고상품 광고태그 확인 시작")
 
-        for page_index in range(max_pages):
-            print(f"\n=== {page_index + 1}번째 페이지 확인 ===")
+        print("\n=== 1번째 페이지 확인 ===")
+        products = parent.locator('ul li a[data-montelena-tabasn="1"]')
+        total_count = products.count()
 
-            products = parent.locator(f'ul li a[data-montelena-tabasn="{page_index + 1}"]')
-            total_count = products.count()
+        for i in range(total_count):
+            product = products.nth(i)
+            ad_tag = product.locator("span.gds-item-card__ad-label")
 
-            for i in range(total_count):
-                product = products.nth(i)
-                ad_tag = product.locator("span.gds-item-card__ad-label")
+            if ad_tag.count() > 0:
+                goodscode = product.get_attribute("data-montelena-goodscode")
+                print(f"✅ 광고 태그 발견: 상품코드={goodscode}")
+                return {"goodscode": goodscode, "target": product}
 
-                if ad_tag.count() > 0:
-                    goodscode = product.get_attribute("data-montelena-goodscode")
-                    print(f"✅ 광고 태그 발견: 상품코드={goodscode} (페이지 {page_index + 1})")
-                    return {"goodscode": goodscode, "target": product}
-
-            # 다음 페이지 이동
-            next_btn = parent.locator("button.gds-action-button:visible").first
-            if next_btn.count() > 0 and next_btn.is_visible():
-                next_btn.click()
-                self.page.wait_for_timeout(2000)
-                print("다음 페이지로 이동합니다 (마지막 페이지면 첫 페이지로 순환).")
-            else:
-                print("⚠️ 다음 페이지 버튼을 찾지 못했습니다. 탐색을 종료합니다.")
-                break
-
-        print("⚠️ 광고 태그가 붙은 상품이 없습니다.")
-        return {"goodscode": None, "target": None}
-
+        raise AssertionError("⚠️ 첫 번째 페이지에 광고 태그가 붙은 상품이 없습니다.")
 
     def click_goods(self, goodscode, target):
         """
@@ -100,7 +85,6 @@ class HomePage():
         url = self.page.url
         print(f"현재 URL: {url}")
 
-        # URL 검증 — goodscode 또는 href 기반
         runtext = f'HOME > {goodscode} 상품 이동확인'
         print("#", runtext, "시작")
         assert goodscode in url, f"상품 번호 {goodscode}가 URL에 포함되어야 합니다"
